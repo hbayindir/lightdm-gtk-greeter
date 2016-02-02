@@ -672,6 +672,7 @@ set_language (const gchar *language)
 static void
 set_message_label (const gchar *text)
 {
+    syslog (LOG_DEBUG, "set_message_label invoked with message %s", text);
     gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
     gtk_label_set_text (message_label, text);
 }
@@ -1413,9 +1414,15 @@ show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType ty
         process_prompts (greeter);
 }
 
+/*
+ * Looks like this function connects the server side of the LightDM
+ * to the greeter side.
+ */
+
 static void
 show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type)
 {
+    syslog (LOG_DEBUG, "show_message_callback invoked. Message is %s", text)
     PAMConversationMessage *message_obj = g_new (PAMConversationMessage, 1);
     if (message_obj)
     {
