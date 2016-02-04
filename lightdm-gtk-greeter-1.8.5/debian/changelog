@@ -1,3 +1,10 @@
+lightdm-gtk-greeter (1.8.5-2.1) UNRELEASED; urgency=medium
+
+  * Non-maintainer upload.
+  * Add debugging messages to understand message flow and infobox behavior 
+
+ -- Hakan Bayindir <hakan.bayindir@tubitak.gov.tr>  Thu, 04 Feb 2016 16:06:43 +0200
+
 lightdm-gtk-greeter (1.8.5-2) unstable; urgency=medium
 
   * debian/control, debian/copyright:

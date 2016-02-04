@@ -19,9 +19,6 @@
 
 #include <glib-unix.h>
 
-/* Required for syslog support */
-#include <syslog.h>
-
 #include <locale.h>
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
@@ -672,7 +669,6 @@ set_language (const gchar *language)
 static void
 set_message_label (const gchar *text)
 {
-    syslog (LOG_DEBUG, "set_message_label invoked with message %s", text);
     gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
     gtk_label_set_text (message_label, text);
 }
@@ -1321,10 +1317,6 @@ process_prompts (LightDMGreeter *greeter)
     {
         PAMConversationMessage *message = (PAMConversationMessage *) pending_questions->data;
         pending_questions = g_slist_remove (pending_questions, (gconstpointer) message);
-        
-        syslog(LOG_DEBUG, "[WHILE] Message is a prompt: %d", message->is_prompt);
-        syslog(LOG_DEBUG, "[WHILE] Value of type union is %d", message->type.message);
-        syslog(LOG_DEBUG, "[WHILE] Text of the message is %s", message->text);
 
         if (!message->is_prompt)
         {
@@ -1418,15 +1410,9 @@ show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType ty
         process_prompts (greeter);
 }
 
-/*
- * Looks like this function connects the server side of the LightDM
- * to the greeter side.
- */
-
 static void
 show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type)
 {
-    syslog (LOG_DEBUG, "show_message_callback invoked. Message is %s", text);
     PAMConversationMessage *message_obj = g_new (PAMConversationMessage, 1);
     if (message_obj)
     {
@@ -2247,15 +2233,6 @@ focus_upon_map (GdkXEvent *gxevent, GdkEvent *event, gpointer  data)
 int
 main (int argc, char **argv)
 {
-    /* Start logging first  
-     * Set logging level to LOG_DEBUG
-     * LOG_UPTO() macro works in reverse, for details see
-     * http://www.gnu.org/software/libc/manual/html_node/setlogmask.html#setlogmask
-     */
-
-    setlogmask (LOG_UPTO (LOG_DEBUG));
-    openlog ("lightdm-gtk-greeter", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);
-
     GKeyFile *config;
     GdkRectangle monitor_geometry;
     GtkBuilder *builder;
@@ -2334,11 +2311,7 @@ main (int argc, char **argv)
     g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), NULL);
     g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (lightdm_greeter_authenticate_autologin), NULL);
     if (!lightdm_greeter_connect_sync (greeter, NULL))
-    {
-        syslog(LOG_INFO, "Exiting with status %d", EXIT_FAILURE); /* Be good, be verbose */
-        closelog(); /* Close log streams before exiting */
         return EXIT_FAILURE;
-    }
 
     /* Set default cursor */
     gdk_window_set_cursor (gdk_get_default_root_window (), gdk_cursor_new (GDK_LEFT_PTR));
@@ -2457,8 +2430,6 @@ main (int argc, char **argv)
                                       lightdm_gtk_greeter_ui_length, &error))
     {
         g_warning ("Error loading UI: %s", error->message);
-        syslog(LOG_INFO, "Exiting with status %d", EXIT_FAILURE); /* Be good, be verbose */
-        closelog(); /* Close log streams before exiting */
         return EXIT_FAILURE;
     }
     g_clear_error (&error);
@@ -2842,9 +2813,6 @@ main (int argc, char **argv)
 		XSync (display, FALSE);
 	    }
     }
-
-    syslog(LOG_INFO, "Exiting with status %d", EXIT_FAILURE); /* Be good, be verbose */
-    closelog(); /* Close log streams before exiting */
 
     return EXIT_SUCCESS;
 }
