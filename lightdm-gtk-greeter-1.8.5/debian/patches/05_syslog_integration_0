@@ -7,36 +7,188 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
 ===================================================================
 --- lightdm-gtk-greeter-1.8.5.orig/src/lightdm-gtk-greeter.c
 +++ lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
-@@ -19,6 +19,9 @@
+@@ -19,6 +19,12 @@
  
  #include <glib-unix.h>
  
 +/* Required for syslog support */
 +#include <syslog.h>
 +
++/* Just for debugging */
++#include <unistd.h>
++
  #include <locale.h>
  #include <gtk/gtk.h>
  #include <glib/gi18n.h>
-@@ -669,6 +672,7 @@ set_language (const gchar *language)
+@@ -669,7 +675,111 @@ set_language (const gchar *language)
  static void
  set_message_label (const gchar *text)
  {
-+    syslog (LOG_DEBUG, "set_message_label invoked with message %s", text);
++    syslog (LOG_DEBUG, "[set_message_label] New message is \"%s\"", text);
++    syslog (LOG_DEBUG, "[set_message_label] Info bar visibility should be %d", g_strcmp0 (text, "") != 0);
++    
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    gtk_widget_set_visible (GTK_WIDGET (info_bar), FALSE);
++    
++    sleep(0.5);
      gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
++    
++    syslog (LOG_DEBUG, "[set_message_label] Info bar visibility is %d", gtk_widget_is_visible (GTK_WIDGET (info_bar)));
++    syslog (LOG_DEBUG, "[set_message_label] Message label visibility is %d", gtk_widget_is_visible (GTK_WIDGET (message_label)));
      gtk_label_set_text (message_label, text);
  }
-@@ -1317,6 +1321,10 @@ process_prompts (LightDMGreeter *greeter
-     {
+ 
+@@ -1318,10 +1428,15 @@ process_prompts (LightDMGreeter *greeter
          PAMConversationMessage *message = (PAMConversationMessage *) pending_questions->data;
          pending_questions = g_slist_remove (pending_questions, (gconstpointer) message);
-+        
-+        syslog(LOG_DEBUG, "[WHILE] Message is a prompt: %d", message->is_prompt);
-+        syslog(LOG_DEBUG, "[WHILE] Value of type union is %d", message->type.message);
-+        syslog(LOG_DEBUG, "[WHILE] Text of the message is %s", message->text);
  
++        syslog(LOG_DEBUG, "[process_prompts] Message is a prompt: %d", message->is_prompt);
++        syslog(LOG_DEBUG, "[process_prompts] Value of type union is %d", message->type.message);
++        syslog(LOG_DEBUG, "[process_prompts] Text of the message is %s", message->text);
++
          if (!message->is_prompt)
          {
-@@ -1410,9 +1418,15 @@ show_prompt_cb (LightDMGreeter *greeter,
+             /* FIXME: this doesn't show multiple messages, but that was
+              * already the case before. */
++            syslog (LOG_DEBUG, "[process_prompts] Message is not a prompt, setting label directly");
+             set_message_label (message->text);
+             continue;
+         }
+@@ -1342,10 +1457,18 @@ process_prompts (LightDMGreeter *greeter
+                 str = g_strndup (str, strlen (str) - 2);
+             else if (g_str_has_suffix (str, ":"))
+                 str = g_strndup (str, strlen (str) - 1);
++
++            syslog(LOG_DEBUG, "[process_prompts] Message is a prompt, but no messages beforehand, so setting prompt as message");
++
+             set_message_label (str);
+             if (str != message->text)
+                 g_free (str);
+         }
++        else if (message->type.prompt == LIGHTDM_PROMPT_TYPE_SECRET)
++        {
++            syslog(LOG_DEBUG, "[process_prompts] Message is a prompt, but it's secret. Not setting prompt as message");
++        }
++
+         gtk_widget_grab_focus (GTK_WIDGET (password_entry));
+         prompted = TRUE;
+         password_prompted = TRUE;
+@@ -1368,6 +1491,8 @@ login_cb (GtkWidget *widget)
+ 
+     gtk_widget_set_sensitive (GTK_WIDGET (username_entry), FALSE);
+     gtk_widget_set_sensitive (GTK_WIDGET (password_entry), FALSE);
++
++    syslog (LOG_DEBUG, "[login_cb] Clearing message label");
+     set_message_label ("");
+     prompt_active = FALSE;
+ 
+@@ -1380,6 +1505,7 @@ login_cb (GtkWidget *widget)
+          * those, until we are done. (Otherwise, authentication will
+          * not complete.) */
+         if (pending_questions)
++            syslog (LOG_DEBUG, "[login_cb] There is pending questions, calling process_prompts()");
+             process_prompts (greeter);
+     }
+     else
+@@ -1407,12 +1533,19 @@ show_prompt_cb (LightDMGreeter *greeter,
+     }
+ 
+     if (!prompt_active)
++        syslog (LOG_DEBUG, "[show_prompt_cb] Since prompt is not active, calling process_prompts()");
          process_prompts (greeter);
  }
  
@@ -48,11 +200,19 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  static void
  show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type)
  {
-+    syslog (LOG_DEBUG, "show_message_callback invoked. Message is %s", text);
++    syslog (LOG_DEBUG, "[show_message_cb] Message is %s", text);
      PAMConversationMessage *message_obj = g_new (PAMConversationMessage, 1);
      if (message_obj)
      {
-@@ -2233,6 +2247,15 @@ focus_upon_map (GdkXEvent *gxevent, GdkE
+@@ -1423,6 +1556,7 @@ show_message_cb (LightDMGreeter *greeter
+     }
+ 
+     if (!prompt_active)
++        syslog (LOG_DEBUG, "[show_message_cb] Since prompt is not active, calling process_prompts()");
+         process_prompts (greeter);
+ }
+ 
+@@ -2233,6 +2367,18 @@ focus_upon_map (GdkXEvent *gxevent, GdkE
  int
  main (int argc, char **argv)
  {
@@ -65,10 +225,13 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
 +    setlogmask (LOG_UPTO (LOG_DEBUG));
 +    openlog ("lightdm-gtk-greeter", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);
 +
++    /* Say hello */
++    syslog (LOG_INFO, "[main] Starting up");
++
      GKeyFile *config;
      GdkRectangle monitor_geometry;
      GtkBuilder *builder;
-@@ -2311,7 +2334,11 @@ main (int argc, char **argv)
+@@ -2311,7 +2457,11 @@ main (int argc, char **argv)
      g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), NULL);
      g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (lightdm_greeter_authenticate_autologin), NULL);
      if (!lightdm_greeter_connect_sync (greeter, NULL))
@@ -80,7 +243,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  
      /* Set default cursor */
      gdk_window_set_cursor (gdk_get_default_root_window (), gdk_cursor_new (GDK_LEFT_PTR));
-@@ -2430,6 +2457,8 @@ main (int argc, char **argv)
+@@ -2430,6 +2580,8 @@ main (int argc, char **argv)
                                        lightdm_gtk_greeter_ui_length, &error))
      {
          g_warning ("Error loading UI: %s", error->message);
@@ -89,7 +252,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
          return EXIT_FAILURE;
      }
      g_clear_error (&error);
-@@ -2814,5 +2843,8 @@ main (int argc, char **argv)
+@@ -2814,5 +2966,8 @@ main (int argc, char **argv)
  	    }
      }
  
