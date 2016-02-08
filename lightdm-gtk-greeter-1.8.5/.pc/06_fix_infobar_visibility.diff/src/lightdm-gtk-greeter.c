@@ -112,9 +112,6 @@ static gboolean prompt_active = FALSE, password_prompted = FALSE;
 static GdkRegion *window_region = NULL;
 #endif
 
-/* Infobar visibility state */
-static gboolean infobar_is_visible = FALSE;
-
 typedef struct
 {
   gboolean is_prompt;
@@ -146,19 +143,6 @@ WindowPosition main_window_pos;
 
 GdkPixbuf* default_user_pixbuf = NULL;
 gchar* default_user_icon = "avatar-default";
-
-
-static gboolean
-check_infobar_visibility(gpointer data)
-{
-    if(infobar_is_visible)
-    {
-        gtk_widget_set_visible (GTK_WIDGET (info_bar), TRUE);
-    }
-
-    return TRUE;
-}
-
 
 static void
 pam_message_finalize (PAMConversationMessage *message)
@@ -690,11 +674,7 @@ set_message_label (const gchar *text)
 {
     syslog (LOG_DEBUG, "[set_message_label] New message is \"%s\"", text);
     syslog (LOG_DEBUG, "[set_message_label] Info bar visibility should be %d", g_strcmp0 (text, "") != 0);
-
-    /* Set global variable about infobar visibility */
-    infobar_is_visible = g_strcmp0 (text, "") != 0;
     gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
-
     syslog (LOG_DEBUG, "[set_message_label] Info bar visibility is %d", gtk_widget_is_visible (GTK_WIDGET (info_bar)));
     syslog (LOG_DEBUG, "[set_message_label] Message label visibility is %d", gtk_widget_is_visible (GTK_WIDGET (message_label)));
     gtk_label_set_text (message_label, text);
@@ -2836,10 +2816,6 @@ main (int argc, char **argv)
     GdkWindow* root_window = gdk_get_default_root_window ();
     gdk_window_set_events (root_window, gdk_window_get_events (root_window) | GDK_SUBSTRUCTURE_MASK);
     gdk_window_add_filter (root_window, focus_upon_map, NULL);
-
-    /* Add the infobar checker here, per 200ms */
-    g_timeout_add(200, check_infobar_visibility, NULL);
-
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 #else

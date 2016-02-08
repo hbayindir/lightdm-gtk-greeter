@@ -1,3 +1,4 @@
 01_unset_AT_SPI_BUS-X11-property.patch
 04_default-gtk-greeter-config.patch
 05_syslog_integration_0
+06_fix_infobar_visibility.diff
