@@ -113,7 +113,7 @@ static GdkRegion *window_region = NULL;
 #endif
 
 /* Infobar visibility state */
-static gboolean infobar_is_visible = FALSE;
+static gboolean is_infobar_visible = FALSE;
 
 typedef struct
 {
@@ -147,11 +147,17 @@ WindowPosition main_window_pos;
 GdkPixbuf* default_user_pixbuf = NULL;
 gchar* default_user_icon = "avatar-default";
 
-
+/* 
+ * This function sets the infobar's visibility true if it should be true.
+ * Due to a race condition in infobar widget, its visibility doesn't change
+ * if visibility is updated during open/close animation.
+ * This function forces the infobar to open if it should be
+ * (as dictated by set_message_label()).
+ */
 static gboolean
 check_infobar_visibility(gpointer data)
 {
-    if(infobar_is_visible)
+    if(is_infobar_visible)
     {
         gtk_widget_set_visible (GTK_WIDGET (info_bar), TRUE);
     }
@@ -692,7 +698,7 @@ set_message_label (const gchar *text)
     syslog (LOG_DEBUG, "[set_message_label] Info bar visibility should be %d", g_strcmp0 (text, "") != 0);
 
     /* Set global variable about infobar visibility */
-    infobar_is_visible = g_strcmp0 (text, "") != 0;
+    is_infobar_visible = g_strcmp0 (text, "") != 0;
     gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
 
     syslog (LOG_DEBUG, "[set_message_label] Info bar visibility is %d", gtk_widget_is_visible (GTK_WIDGET (info_bar)));
