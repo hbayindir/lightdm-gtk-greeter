@@ -49,3 +49,7 @@ Thumbs.db
 # Various signature files #
 ###########################
 *.dsc
+
+# Unrelated files to the project source tree #
+##############################################
+*.changes

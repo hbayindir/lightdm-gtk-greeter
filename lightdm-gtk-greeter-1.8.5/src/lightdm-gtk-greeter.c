@@ -19,9 +19,6 @@
 
 #include <glib-unix.h>
 
-/* Required for syslog support */
-#include <syslog.h>
-
 #include <locale.h>
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
@@ -112,9 +109,6 @@ static gboolean prompt_active = FALSE, password_prompted = FALSE;
 static GdkRegion *window_region = NULL;
 #endif
 
-/* Infobar visibility state */
-static gboolean is_infobar_visible = FALSE;
-
 typedef struct
 {
   gboolean is_prompt;
@@ -146,25 +140,6 @@ WindowPosition main_window_pos;
 
 GdkPixbuf* default_user_pixbuf = NULL;
 gchar* default_user_icon = "avatar-default";
-
-/* 
- * This function sets the infobar's visibility true if it should be true.
- * Due to a race condition in infobar widget, its visibility doesn't change
- * if visibility is updated during open/close animation.
- * This function forces the infobar to open if it should be
- * (as dictated by set_message_label()).
- */
-static gboolean
-check_infobar_visibility(gpointer data)
-{
-    if(is_infobar_visible)
-    {
-        gtk_widget_set_visible (GTK_WIDGET (info_bar), TRUE);
-    }
-
-    return TRUE;
-}
-
 
 static void
 pam_message_finalize (PAMConversationMessage *message)
@@ -694,15 +669,7 @@ set_language (const gchar *language)
 static void
 set_message_label (const gchar *text)
 {
-    syslog (LOG_DEBUG, "[set_message_label] New message is \"%s\"", text);
-    syslog (LOG_DEBUG, "[set_message_label] Info bar visibility should be %d", g_strcmp0 (text, "") != 0);
-
-    /* Set global variable about infobar visibility */
-    is_infobar_visible = g_strcmp0 (text, "") != 0;
     gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
-
-    syslog (LOG_DEBUG, "[set_message_label] Info bar visibility is %d", gtk_widget_is_visible (GTK_WIDGET (info_bar)));
-    syslog (LOG_DEBUG, "[set_message_label] Message label visibility is %d", gtk_widget_is_visible (GTK_WIDGET (message_label)));
     gtk_label_set_text (message_label, text);
 }
 
@@ -1351,15 +1318,10 @@ process_prompts (LightDMGreeter *greeter)
         PAMConversationMessage *message = (PAMConversationMessage *) pending_questions->data;
         pending_questions = g_slist_remove (pending_questions, (gconstpointer) message);
 
-        syslog(LOG_DEBUG, "[process_prompts] Message is a prompt: %d", message->is_prompt);
-        syslog(LOG_DEBUG, "[process_prompts] Value of type union is %d", message->type.message);
-        syslog(LOG_DEBUG, "[process_prompts] Text of the message is %s", message->text);
-
         if (!message->is_prompt)
         {
             /* FIXME: this doesn't show multiple messages, but that was
              * already the case before. */
-            syslog (LOG_DEBUG, "[process_prompts] Message is not a prompt, setting label directly");
             set_message_label (message->text);
             continue;
         }
@@ -1380,18 +1342,10 @@ process_prompts (LightDMGreeter *greeter)
                 str = g_strndup (str, strlen (str) - 2);
             else if (g_str_has_suffix (str, ":"))
                 str = g_strndup (str, strlen (str) - 1);
-
-            syslog(LOG_DEBUG, "[process_prompts] Message is a prompt, but no messages beforehand, so setting prompt as message");
-
             set_message_label (str);
             if (str != message->text)
                 g_free (str);
         }
-        else if (message->type.prompt == LIGHTDM_PROMPT_TYPE_SECRET)
-        {
-            syslog(LOG_DEBUG, "[process_prompts] Message is a prompt, but it's secret. Not setting prompt as message");
-        }
-
         gtk_widget_grab_focus (GTK_WIDGET (password_entry));
         prompted = TRUE;
         password_prompted = TRUE;
@@ -1414,8 +1368,6 @@ login_cb (GtkWidget *widget)
 
     gtk_widget_set_sensitive (GTK_WIDGET (username_entry), FALSE);
     gtk_widget_set_sensitive (GTK_WIDGET (password_entry), FALSE);
-
-    syslog (LOG_DEBUG, "[login_cb] Clearing message label");
     set_message_label ("");
     prompt_active = FALSE;
 
@@ -1428,7 +1380,6 @@ login_cb (GtkWidget *widget)
          * those, until we are done. (Otherwise, authentication will
          * not complete.) */
         if (pending_questions)
-            syslog (LOG_DEBUG, "[login_cb] There is pending questions, calling process_prompts()");
             process_prompts (greeter);
     }
     else
@@ -1456,19 +1407,12 @@ show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType ty
     }
 
     if (!prompt_active)
-        syslog (LOG_DEBUG, "[show_prompt_cb] Since prompt is not active, calling process_prompts()");
         process_prompts (greeter);
 }
-
-/*
- * Looks like this function connects the server side of the LightDM
- * to the greeter side.
- */
 
 static void
 show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType type)
 {
-    syslog (LOG_DEBUG, "[show_message_cb] Message is %s", text);
     PAMConversationMessage *message_obj = g_new (PAMConversationMessage, 1);
     if (message_obj)
     {
@@ -1479,7 +1423,6 @@ show_message_cb (LightDMGreeter *greeter, const gchar *text, LightDMMessageType 
     }
 
     if (!prompt_active)
-        syslog (LOG_DEBUG, "[show_message_cb] Since prompt is not active, calling process_prompts()");
         process_prompts (greeter);
 }
 
@@ -2290,18 +2233,6 @@ focus_upon_map (GdkXEvent *gxevent, GdkEvent *event, gpointer  data)
 int
 main (int argc, char **argv)
 {
-    /* Start logging first  
-     * Set logging level to LOG_DEBUG
-     * LOG_UPTO() macro works in reverse, for details see
-     * http://www.gnu.org/software/libc/manual/html_node/setlogmask.html#setlogmask
-     */
-
-    setlogmask (LOG_UPTO (LOG_DEBUG));
-    openlog ("lightdm-gtk-greeter", LOG_CONS | LOG_PID | LOG_NDELAY, LOG_DAEMON);
-
-    /* Say hello */
-    syslog (LOG_INFO, "[main] Starting up");
-
     GKeyFile *config;
     GdkRectangle monitor_geometry;
     GtkBuilder *builder;
@@ -2380,11 +2311,7 @@ main (int argc, char **argv)
     g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), NULL);
     g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (lightdm_greeter_authenticate_autologin), NULL);
     if (!lightdm_greeter_connect_sync (greeter, NULL))
-    {
-        syslog(LOG_INFO, "Exiting with status %d", EXIT_FAILURE); /* Be good, be verbose */
-        closelog(); /* Close log streams before exiting */
         return EXIT_FAILURE;
-    }
 
     /* Set default cursor */
     gdk_window_set_cursor (gdk_get_default_root_window (), gdk_cursor_new (GDK_LEFT_PTR));
@@ -2503,8 +2430,6 @@ main (int argc, char **argv)
                                       lightdm_gtk_greeter_ui_length, &error))
     {
         g_warning ("Error loading UI: %s", error->message);
-        syslog(LOG_INFO, "Exiting with status %d", EXIT_FAILURE); /* Be good, be verbose */
-        closelog(); /* Close log streams before exiting */
         return EXIT_FAILURE;
     }
     g_clear_error (&error);
@@ -2843,10 +2768,6 @@ main (int argc, char **argv)
     gdk_window_set_events (root_window, gdk_window_get_events (root_window) | GDK_SUBSTRUCTURE_MASK);
     gdk_window_add_filter (root_window, focus_upon_map, NULL);
 
-    /* Add the infobar checker here, per 200ms */
-    g_timeout_add(200, check_infobar_visibility, NULL);
-
-
 #if GTK_CHECK_VERSION (3, 0, 0)
 #else
     gdk_threads_enter();
@@ -2892,9 +2813,6 @@ main (int argc, char **argv)
 		XSync (display, FALSE);
 	    }
     }
-
-    syslog(LOG_INFO, "Exiting with status %d", EXIT_FAILURE); /* Be good, be verbose */
-    closelog(); /* Close log streams before exiting */
 
     return EXIT_SUCCESS;
 }
