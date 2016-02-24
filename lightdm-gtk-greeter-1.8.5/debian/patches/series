@@ -1,2 +1,3 @@
 01_unset_AT_SPI_BUS-X11-property.patch
 04_default-gtk-greeter-config.patch
+05_disable_infobar_animations

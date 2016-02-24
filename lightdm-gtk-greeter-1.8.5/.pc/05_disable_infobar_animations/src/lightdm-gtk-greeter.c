@@ -2469,9 +2469,6 @@ main (int argc, char **argv)
     gtk_widget_set_name(GTK_WIDGET(info_bar), "greeter_infobar");
     content_area = gtk_info_bar_get_content_area(info_bar);
 
-    /* Disable GTK Toolkit animations to prevent missing infobar messages bug */
-    g_object_set (gtk_settings_get_default(), "gtk-enable-animations", FALSE, NULL);
-
     message_label = GTK_LABEL (gtk_builder_get_object (builder, "message_label"));
     g_object_ref(message_label);
     gtk_container_remove(GTK_CONTAINER(infobar_compat), GTK_WIDGET(message_label));
