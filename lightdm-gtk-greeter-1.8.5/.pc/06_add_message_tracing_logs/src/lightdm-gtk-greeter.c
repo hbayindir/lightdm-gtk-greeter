@@ -669,9 +669,6 @@ set_language (const gchar *language)
 static void
 set_message_label (const gchar *text)
 {
-    g_debug ("[set_message_label] New message is \"%s\"", text);
-    g_debug ("[set_message_label] Info bar visibility should be %d", g_strcmp0 (text, "") != 0);
-
     gtk_widget_set_visible (GTK_WIDGET (info_bar), g_strcmp0 (text, "") != 0);
     gtk_label_set_text (message_label, text);
 }
@@ -1321,10 +1318,6 @@ process_prompts (LightDMGreeter *greeter)
         PAMConversationMessage *message = (PAMConversationMessage *) pending_questions->data;
         pending_questions = g_slist_remove (pending_questions, (gconstpointer) message);
 
-        g_debug ("[process_prompts] Message is a prompt: %d", message->is_prompt);
-        g_debug ("[process_prompts] Value of type union is %d", message->type.message);
-        g_debug ("[process_prompts] Text of the message is %s", message->text);
-
         if (!message->is_prompt)
         {
             /* FIXME: this doesn't show multiple messages, but that was
@@ -1349,18 +1342,10 @@ process_prompts (LightDMGreeter *greeter)
                 str = g_strndup (str, strlen (str) - 2);
             else if (g_str_has_suffix (str, ":"))
                 str = g_strndup (str, strlen (str) - 1);
-
-            g_debug ("[process_prompts] Message is a prompt, but no messages beforehand, so setting prompt as message");
-
             set_message_label (str);
             if (str != message->text)
                 g_free (str);
         }
-        else if (message->type.prompt == LIGHTDM_PROMPT_TYPE_SECRET)
-        {
-            g_debug ("[process_prompts] Message is a prompt, but it's secret. Not setting prompt as message");
-        }
-
         gtk_widget_grab_focus (GTK_WIDGET (password_entry));
         prompted = TRUE;
         password_prompted = TRUE;
@@ -1395,10 +1380,7 @@ login_cb (GtkWidget *widget)
          * those, until we are done. (Otherwise, authentication will
          * not complete.) */
         if (pending_questions)
-        {
-            g_debug ("[login_cb] There is pending questions, calling process_prompts()");
             process_prompts (greeter);
-        }
     }
     else
         start_authentication (lightdm_greeter_get_authentication_user (greeter));
@@ -1415,8 +1397,6 @@ cancel_cb (GtkWidget *widget)
 static void
 show_prompt_cb (LightDMGreeter *greeter, const gchar *text, LightDMPromptType type)
 {
-    g_debug ("[show_message_cb] Message is %s", text);
-
     PAMConversationMessage *message_obj = g_new (PAMConversationMessage, 1);
     if (message_obj)
     {
