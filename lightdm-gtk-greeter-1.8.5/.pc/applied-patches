@@ -2,3 +2,4 @@
 04_default-gtk-greeter-config.patch
 05_disable_infobar_animations
 06_add_message_tracing_logs
+07_add_multiple_messages_support_for_infÄobar

@@ -1,8 +1,11 @@
 lightdm-gtk-greeter (1.8.5-2.1) UNRELEASED; urgency=medium
 
+  [ Hakan Bayindir ]
   * Non-maintainer upload.
   * Disable GTK Infobar animations to prevent missing messages. 
-  * Add more debug messages to trace message printing behavior. 
+  * Add more debug messages to trace message printing behavior.
+  * Add support for showing multiple messages in the infobar. 
+
 
  -- Hakan Bayindir <hakan.bayindir@tubitak.gov.tr>  Thu, 04 Feb 2016 16:06:43 +0200
 

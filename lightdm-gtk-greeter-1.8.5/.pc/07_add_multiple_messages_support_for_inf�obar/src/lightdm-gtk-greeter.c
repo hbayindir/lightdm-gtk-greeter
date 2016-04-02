@@ -97,9 +97,6 @@ static gchar *current_language;
 /* Screensaver values */
 int timeout, interval, prefer_blanking, allow_exposures;
 
-/* Temporary message label string */
-static gchar *long_infobar_message;
-
 #if GTK_CHECK_VERSION (3, 0, 0)
 static GdkRGBA *default_background_color = NULL;
 #else
@@ -1298,10 +1295,6 @@ get_message_label (void)
 static void
 process_prompts (LightDMGreeter *greeter)
 {
-    // This variable controls whether we are appending messages to the info box,
-    // or are we setting the message by clearing the message.
-    gboolean append_next_messages = FALSE;
-
     if (!pending_questions)
         return;
 
@@ -1336,21 +1329,9 @@ process_prompts (LightDMGreeter *greeter)
         {
             /* FIXME: this doesn't show multiple messages, but that was
              * already the case before. */
-            if(!append_next_messages)
-            {
-                set_message_label (message->text);
-                append_next_messages = true;
-            }
-            else
-            {
-                long_infobar_message = g_strjoin("\n", get_message_label(), message->text);
-                set_message_label (long_infobar_message);
-            }
-
+            set_message_label (message->text);
             continue;
         }
-
-        append_next_messages = FALSE;
 
         gtk_entry_set_text (password_entry, "");
         gtk_entry_set_visibility (password_entry, message->type.prompt != LIGHTDM_PROMPT_TYPE_SECRET);
