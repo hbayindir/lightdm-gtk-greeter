@@ -19,9 +19,6 @@
 
 #include <glib-unix.h>
 
-/* TEMPORARY: syslog support for easier debugging */
-#include <syslog.h>
-
 #include <locale.h>
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
@@ -1323,7 +1320,6 @@ process_prompts (LightDMGreeter *greeter)
         return;
     }
 
-    syslog (LOG_DEBUG, "[process_prompts] Entering while loop");
     g_debug ("[process_prompts] Entering while loop");
 
     while (pending_questions)
@@ -1331,19 +1327,13 @@ process_prompts (LightDMGreeter *greeter)
         PAMConversationMessage *message = (PAMConversationMessage *) pending_questions->data;
         pending_questions = g_slist_remove (pending_questions, (gconstpointer) message);
 
-        /* TEMPORARY LOGGING */
-        syslog (LOG_DEBUG, "[process_prompts] Message is a prompt: %d", message->is_prompt);
-        syslog (LOG_DEBUG, "[process_prompts] Value of type union is %d", message->type.message);
-        syslog (LOG_DEBUG, "[process_prompts] Text of the message is %s", message->text);
-        syslog (LOG_DEBUG, "[process_prompts] Will append next prompt: %d", append_next_prompt);
-
         g_debug ("[process_prompts] Message is a prompt: %d", message->is_prompt);
         g_debug ("[process_prompts] Value of type union is %d", message->type.message);
         g_debug ("[process_prompts] Text of the message is %s", message->text);
 
         if (!message->is_prompt)
         {
-            syslog (LOG_DEBUG, "[process_prompts] Setting message %s since it's a prompt", message->text);
+            g_debug ("[process_prompts] Setting message %s since it's a prompt", message->text);
 
             if (!append_next_prompt)
             {
@@ -1356,8 +1346,6 @@ process_prompts (LightDMGreeter *greeter)
                     g_free (long_infobar_message);
                     long_infobar_message = NULL;
                 }
-
-                syslog (LOG_DEBUG, "[process_prompts] append_next_prompt is already TRUE");
                 set_message_label (message->text);
             }
             else
@@ -1366,12 +1354,13 @@ process_prompts (LightDMGreeter *greeter)
                 set_message_label (long_infobar_message);
             }
 
-            syslog (LOG_DEBUG, "[process_prompts] Setting append next prompt to TRUE");
+            g_debug ("[process_prompts] Setting append next prompt to TRUE");
             append_next_prompt = TRUE;
             continue;
         }
 
-        syslog (LOG_DEBUG, "[process_prompts] Setting append next prompt to FALSE");
+        /* If we're reached here, we're going to write different things to the infobar. */
+        g_debug ("[process_prompts] Setting append next prompt to FALSE");
         append_next_prompt = FALSE;
         
         /*
