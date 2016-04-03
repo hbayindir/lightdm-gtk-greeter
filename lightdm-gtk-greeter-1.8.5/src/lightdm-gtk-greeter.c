@@ -19,6 +19,9 @@
 
 #include <glib-unix.h>
 
+/* TEMPORARY: syslog support for easier debugging */
+#include <syslog.h>
+
 #include <locale.h>
 #include <gtk/gtk.h>
 #include <glib/gi18n.h>
@@ -97,8 +100,9 @@ static gchar *current_language;
 /* Screensaver values */
 int timeout, interval, prefer_blanking, allow_exposures;
 
-/* Temporary message label string */
-static gchar *long_infobar_message;
+/* Support variables for multiple messages in infobar */
+gboolean append_next_prompt = FALSE;
+gchar *long_infobar_message = NULL;
 
 #if GTK_CHECK_VERSION (3, 0, 0)
 static GdkRGBA *default_background_color = NULL;
@@ -1298,10 +1302,6 @@ get_message_label (void)
 static void
 process_prompts (LightDMGreeter *greeter)
 {
-    // This variable controls whether we are appending messages to the info box,
-    // or are we setting the message by clearing the message.
-    gboolean append_next_messages = FALSE;
-
     if (!pending_questions)
         return;
 
@@ -1323,10 +1323,19 @@ process_prompts (LightDMGreeter *greeter)
         return;
     }
 
+    syslog (LOG_DEBUG, "[process_prompts] Entering while loop");
+    g_debug ("[process_prompts] Entering while loop");
+
     while (pending_questions)
     {
         PAMConversationMessage *message = (PAMConversationMessage *) pending_questions->data;
         pending_questions = g_slist_remove (pending_questions, (gconstpointer) message);
+
+        /* TEMPORARY LOGGING */
+        syslog (LOG_DEBUG, "[process_prompts] Message is a prompt: %d", message->is_prompt);
+        syslog (LOG_DEBUG, "[process_prompts] Value of type union is %d", message->type.message);
+        syslog (LOG_DEBUG, "[process_prompts] Text of the message is %s", message->text);
+        syslog (LOG_DEBUG, "[process_prompts] Will append next prompt: %d", append_next_prompt);
 
         g_debug ("[process_prompts] Message is a prompt: %d", message->is_prompt);
         g_debug ("[process_prompts] Value of type union is %d", message->type.message);
@@ -1334,23 +1343,46 @@ process_prompts (LightDMGreeter *greeter)
 
         if (!message->is_prompt)
         {
-            /* FIXME: this doesn't show multiple messages, but that was
-             * already the case before. */
-            if(!append_next_messages)
+            syslog (LOG_DEBUG, "[process_prompts] Setting message %s since it's a prompt", message->text);
+
+            if (!append_next_prompt)
             {
+                /*
+                 * Since we're going to change the message label anyway,
+                 * We won't need that message anymore.
+                 */
+                if (long_infobar_message != NULL)
+                {
+                    g_free (long_infobar_message);
+                    long_infobar_message = NULL;
+                }
+
+                syslog (LOG_DEBUG, "[process_prompts] append_next_prompt is already TRUE");
                 set_message_label (message->text);
-                append_next_messages = true;
             }
             else
             {
-                long_infobar_message = g_strjoin("\n", get_message_label(), message->text);
+                long_infobar_message =  g_strjoin ("\n", get_message_label (), message->text, NULL);
                 set_message_label (long_infobar_message);
             }
 
+            syslog (LOG_DEBUG, "[process_prompts] Setting append next prompt to TRUE");
+            append_next_prompt = TRUE;
             continue;
         }
 
-        append_next_messages = FALSE;
+        syslog (LOG_DEBUG, "[process_prompts] Setting append next prompt to FALSE");
+        append_next_prompt = FALSE;
+        
+        /*
+         * If we've reached here, the message label is gonna change below,
+         * so we won't need that message.
+         */
+        if (long_infobar_message != NULL)
+        {
+            g_free (long_infobar_message);
+            long_infobar_message = NULL;
+        }
 
         gtk_entry_set_text (password_entry, "");
         gtk_entry_set_visibility (password_entry, message->type.prompt != LIGHTDM_PROMPT_TYPE_SECRET);

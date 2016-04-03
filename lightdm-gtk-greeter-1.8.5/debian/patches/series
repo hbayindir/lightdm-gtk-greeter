@@ -1,5 +1,5 @@
 01_unset_AT_SPI_BUS-X11-property.patch
 04_default-gtk-greeter-config.patch
-05_disable_infobar_animations
-06_add_message_tracing_logs
-07_add_multiple_messages_support_for_infÄobar
+05_disable_infobar_animations.patch
+06_add_message_tracing_logs.patch
+07_add_multiline_infobar_messages.patch
