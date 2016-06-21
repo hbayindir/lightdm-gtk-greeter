@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2010-2011 Robert Ancell.
  * Author: Robert Ancell <robert.ancell@canonical.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later
@@ -68,7 +68,7 @@ static GtkWidget *clock_label;
 static GtkWidget *menubar, *power_menuitem, *session_menuitem, *language_menuitem, *a11y_menuitem, *session_badge;
 static GtkWidget *suspend_menuitem, *hibernate_menuitem, *restart_menuitem, *shutdown_menuitem;
 static GtkWidget *keyboard_menuitem;
-static GtkMenu *session_menu, *language_menu, *keyboard_layout_menu;
+static GtkMenu *session_menu, *language_menu;
 
 /* Login Window Widgets */
 static GtkWindow *login_window;
@@ -93,9 +93,6 @@ GSList *backgrounds = NULL;
 /* Current choices */
 static gchar *current_session;
 static gchar *current_language;
-
-/* Global lists */
-GSList *keyboard_layouts;
 
 /* Screensaver values */
 int timeout, interval, prefer_blanking, allow_exposures;
@@ -609,7 +606,7 @@ get_language (void)
     if (current_language)
         return g_strdup (current_language);
 
-    menu_items = gtk_container_get_children(GTK_CONTAINER(language_menu));
+    menu_items = gtk_container_get_children(GTK_CONTAINER(language_menu));    
     for (menu_iter = menu_items; menu_iter != NULL; menu_iter = g_list_next(menu_iter))
     {
         if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_iter->data)))
@@ -624,7 +621,7 @@ get_language (void)
 static void
 set_language (const gchar *language)
 {
-    const gchar *default_language = NULL;
+    const gchar *default_language = NULL;    
     GList *menu_items, *menu_iter;
 
     if (!gtk_widget_get_visible (language_menuitem))
@@ -670,54 +667,6 @@ set_language (const gchar *language)
             if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_iter->data)))
                 gtk_menu_item_set_label(GTK_MENU_ITEM(language_menuitem), g_strdup(g_object_get_data (G_OBJECT (menu_iter->data), "language-code")));
         }
-    }
-}
-
-
-
-/* This little callback is called from below function.
- * It gets the layouts, finds the current item and activates it on the menu.
- */
-static void
-iterate_over_keyboard_layouts_cb (GtkWidget *keyboard_layout_radiobutton, gpointer *current_layout_name)
-{
-    LightDMLayout *current_iteration_layout = g_object_get_data (G_OBJECT (keyboard_layout_radiobutton), "keyboard-layout");
-    const gchar *current_iteration_layout_name = lightdm_layout_get_name(current_iteration_layout);
-
-    if (g_strcmp0(current_iteration_layout_name, current_layout_name) == 0)
-    {
-        g_warning ("I found the active keyboard layout on the menu, which is %s", current_iteration_layout_name);
-        gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (keyboard_layout_radiobutton), TRUE);
-    }
-}
-
-/* This function sets the keyboard layout and the radio menu that controls the
- * layouts. When called without an argument, it just gets the keyboard and
- * sets the menu. When called with a parameter, it actually sets the layout.
- * In that case, radio menu updates itself automatically, so no action is needed
- * on the menu.
- */
-static void
-set_keyboard_layout (LightDMLayout *keyboard_layout)
-{
-    if (keyboard_layout == NULL)
-    {
-        /* Get the current layout and its name. */
-        LightDMLayout *current_layout;
-        const gchar *current_layout_name;
-
-        current_layout = lightdm_get_layout ();
-        current_layout_name = g_strdup(lightdm_layout_get_name (current_layout));
-        g_warning ("Current keyboard layout name is %s", current_layout_name);
-
-        /* Remaining logic is in the callback */
-        g_slist_foreach (keyboard_layouts, (GFunc) iterate_over_keyboard_layouts_cb, (gpointer) current_layout_name);
-    }
-
-    if (keyboard_layout != NULL)
-    {
-        lightdm_set_layout(keyboard_layout);
-        return;
     }
 }
 
@@ -809,7 +758,7 @@ set_user_image (const gchar *username)
             }
         }
     }
-
+    
     if (default_user_pixbuf)
         gtk_image_set_from_pixbuf (GTK_IMAGE (user_image), default_user_pixbuf);
     else
@@ -837,7 +786,7 @@ get_absolute_position (const DimensionPosition *p, gint screen, gint window)
 
 static void
 center_window (GtkWindow *window, GtkAllocation *unused, const WindowPosition *pos)
-{
+{   
     GdkScreen *screen = gtk_window_get_screen (window);
     GtkAllocation allocation;
     GdkRectangle monitor_geometry;
@@ -1144,19 +1093,6 @@ language_selected_cb(GtkMenuItem *menuitem, gpointer user_data)
     }
 }
 
-void
-keyboard_layout_selected_cb(GtkMenuItem *menuitem, gpointer user_data);
-G_MODULE_EXPORT
-void keyboard_layout_selected_cb (GtkMenuItem *menuitem, gpointer user_data)
-{
-  if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menuitem)))
-  {
-     LightDMLayout *keyboard_layout = g_object_get_data (G_OBJECT (menuitem), "keyboard-layout");
-     g_warning ("Keyboard layout with name %s is selected.", lightdm_layout_get_name(keyboard_layout));
-     set_keyboard_layout (keyboard_layout);
-  }
-}
-
 static void
 power_menu_cb (GtkWidget *menuitem, gpointer userdata)
 {
@@ -1426,7 +1362,7 @@ process_prompts (LightDMGreeter *greeter)
         /* If we're reached here, we're going to write different things to the infobar. */
         g_debug ("[process_prompts] Setting append next prompt to FALSE");
         append_next_prompt = FALSE;
-
+        
         /*
          * If we've reached here, the message label is gonna change below,
          * so we won't need that message.
@@ -1483,7 +1419,7 @@ login_cb (GtkWidget *widget)
 {
     /* Reset to default screensaver values */
     if (lightdm_greeter_get_lock_hint (greeter))
-        XSetScreenSaver(gdk_x11_display_get_xdisplay(gdk_display_get_default ()), timeout, interval, prefer_blanking, allow_exposures);
+        XSetScreenSaver(gdk_x11_display_get_xdisplay(gdk_display_get_default ()), timeout, interval, prefer_blanking, allow_exposures);        
 
     gtk_widget_set_sensitive (GTK_WIDGET (username_entry), FALSE);
     gtk_widget_set_sensitive (GTK_WIDGET (password_entry), FALSE);
@@ -1613,7 +1549,7 @@ show_power_prompt (const gchar* action, const gchar* message, const gchar* icon,
     const GList *items, *item;
     gint logged_in_users = 0;
     gchar *warning;
-
+    
     /* Check if there are still users logged in, count them and if so, display a warning */
     items = lightdm_user_list_get_users (lightdm_user_list_get_instance ());
     for (item = items; item; item = item->next)
@@ -1638,7 +1574,7 @@ show_power_prompt (const gchar* action, const gchar* message, const gchar* icon,
                                      GTK_MESSAGE_OTHER,
                                      GTK_BUTTONS_NONE,
                                      "%s", action);
-    gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(dialog), "%s", message);
+    gtk_message_dialog_format_secondary_markup(GTK_MESSAGE_DIALOG(dialog), "%s", message);        
     button = gtk_dialog_add_button(GTK_DIALOG (dialog), _("Cancel"), GTK_RESPONSE_CANCEL);
     gtk_widget_set_name(button, "cancel_button");
     button = gtk_dialog_add_button(GTK_DIALOG (dialog), action, GTK_RESPONSE_OK);
@@ -1972,7 +1908,7 @@ load_user_list (void)
     {
         gchar *name;
         gboolean matched = FALSE;
-
+        
         if (selected_user)
         {
             do
@@ -1998,7 +1934,7 @@ load_user_list (void)
             set_displayed_user(greeter, name);
             g_free(name);
         }
-
+        
     }
 
     g_free (last_user);
@@ -2258,16 +2194,16 @@ clock_timeout_thread (void)
     struct tm * timeinfo;
     gchar time_str[50];
     gchar *markup;
-
+    
     time ( &rawtime );
     timeinfo = localtime ( &rawtime );
-
+    
     strftime(time_str, 50, clock_format, timeinfo);
     markup = g_markup_printf_escaped("<b>%s</b>", time_str);
     if (g_strcmp0(markup, gtk_label_get_label(GTK_LABEL(clock_label))) != 0)
         gtk_label_set_markup( GTK_LABEL(clock_label), markup );
     g_free(markup);
-
+    
     return TRUE;
 }
 
@@ -2407,7 +2343,7 @@ main (int argc, char **argv)
 
     /* init gtk */
     gtk_init (&argc, &argv);
-
+    
 #ifdef HAVE_LIBIDO
     ido_init ();
 #endif
@@ -2430,7 +2366,7 @@ main (int argc, char **argv)
     g_clear_error (&error);
 
     greeter = lightdm_greeter_new ();
-    g_signal_connect (greeter, "show-prompt", G_CALLBACK (show_prompt_cb), NULL);
+    g_signal_connect (greeter, "show-prompt", G_CALLBACK (show_prompt_cb), NULL);  
     g_signal_connect (greeter, "show-message", G_CALLBACK (show_message_cb), NULL);
     g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), NULL);
     g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (lightdm_greeter_authenticate_autologin), NULL);
@@ -2483,7 +2419,7 @@ main (int argc, char **argv)
     if (value)
         screensaver_timeout = g_ascii_strtoll (value, &end_ptr, 0);
     g_free (value);
-
+    
     display = gdk_x11_display_get_xdisplay(gdk_display_get_default ());
     if (lightdm_greeter_get_lock_hint (greeter)) {
         XGetScreenSaver(display, &timeout, &interval, &prefer_blanking, &allow_exposures);
@@ -2523,7 +2459,7 @@ main (int argc, char **argv)
         value = g_strdup("Sans 10");
         g_object_set (gtk_settings_get_default (), "gtk-font-name", value, NULL);
     }
-    g_object_get (gtk_settings_get_default (), "gtk-font-name", &default_font_name, NULL);
+    g_object_get (gtk_settings_get_default (), "gtk-font-name", &default_font_name, NULL);  
     value = g_key_file_get_value (config, "greeter", "xft-dpi", NULL);
     if (value)
         g_object_set (gtk_settings_get_default (), "gtk-xft-dpi", (int) (1024 * atof (value)), NULL);
@@ -2539,7 +2475,7 @@ main (int argc, char **argv)
     if (value)
         g_object_set (gtk_settings_get_default (), "gtk-xft-rgba", value, NULL);
     g_free (value);
-
+    
     /* Get a11y on screen keyboard command*/
     gint argp;
     value = g_key_file_get_value (config, "greeter", "keyboard", NULL);
@@ -2557,7 +2493,7 @@ main (int argc, char **argv)
         return EXIT_FAILURE;
     }
     g_clear_error (&error);
-
+    
     /* Panel */
     panel_window = GTK_WINDOW (gtk_builder_get_object (builder, "panel_window"));
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -2571,12 +2507,12 @@ main (int argc, char **argv)
     clock_label = GTK_WIDGET(gtk_builder_get_object (builder, "clock_label"));
     menubar = GTK_WIDGET (gtk_builder_get_object (builder, "menubar"));
     /* Never allow the panel-window to be moved via the menubar */
-#if GTK_CHECK_VERSION (3, 0, 0)
+#if GTK_CHECK_VERSION (3, 0, 0) 
     css_provider = gtk_css_provider_new ();
     gtk_css_provider_load_from_data (css_provider, "* { -GtkWidget-window-dragging: false; }", -1, NULL);
     gtk_style_context_add_provider (GTK_STYLE_CONTEXT(gtk_widget_get_style_context(GTK_WIDGET(menubar))), GTK_STYLE_PROVIDER (css_provider), 800);
 #endif
-
+    
     keyboard_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "keyboard_menuitem"));
 
     /* Login window */
@@ -2694,7 +2630,7 @@ main (int argc, char **argv)
         {
             LightDMSession *session = item->data;
             GtkWidget *radiomenuitem;
-
+            
             radiomenuitem = gtk_radio_menu_item_new_with_label (sessions, lightdm_session_get_name (session));
             g_object_set_data (G_OBJECT (radiomenuitem), "session-key", (gpointer) lightdm_session_get_key (session));
             sessions = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
@@ -2722,7 +2658,7 @@ main (int argc, char **argv)
                 label = g_strdup_printf ("%s - %s", lightdm_language_get_name (language), country);
             else
                 label = g_strdup (lightdm_language_get_name (language));
-
+                
             code = lightdm_language_get_code (language);
             gchar *modifier = strchr (code, '@');
             if (modifier != NULL)
@@ -2741,40 +2677,7 @@ main (int argc, char **argv)
         }
         set_language (NULL);
     }
-
-    /* For Now, I will piggyback the keyboard menu to language menu for simplicity */
-    if (gtk_widget_get_visible (language_menuitem))
-    {
-      items = lightdm_get_layouts();
-      keyboard_layouts = NULL;
-
-      for (item = items; item; item = item->next)
-      {
-        LightDMLayout *keyboard_layout = item->data;
-        const gchar *layout_name, *layout_description;
-        gchar *label;
-        GtkWidget *radiomenuitem;
-
-        layout_name = g_strdup (lightdm_layout_get_name (keyboard_layout));
-        layout_description = g_strdup (lightdm_layout_get_description(keyboard_layout));
-        label = layout_description;
-
-        // TODO: Change this method to something configurable or automagic.
-        // Only add Turkish Q, Turkish F and English keyboard layouts.
-        if (g_strcmp0(layout_name, "tr") == 0 || g_strcmp0(layout_name, "tr\tf") == 0)
-        {
-            radiomenuitem = gtk_radio_menu_item_new_with_label (keyboard_layouts, label);
-            g_object_set_data (G_OBJECT (radiomenuitem), "keyboard-layout", (gpointer) keyboard_layout);
-            keyboard_layouts = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
-            g_signal_connect(G_OBJECT(radiomenuitem), "activate", G_CALLBACK(keyboard_layout_selected_cb), NULL);
-            gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), radiomenuitem);
-            gtk_widget_show (GTK_WIDGET(radiomenuitem));
-        }
-      }
-
-      set_keyboard_layout(NULL);
-    }
-
+    
     /* a11y menu */
     if (gtk_widget_get_visible (a11y_menuitem))
     {
@@ -2822,14 +2725,14 @@ main (int argc, char **argv)
         numScreens = gdk_display_get_n_screens (gdk_display_get_default());
     #endif
 
-    /* Set up the background images */
+    /* Set up the background images */	
     for (scr = 0; scr < numScreens; scr++)
     {
         screen = gdk_display_get_screen (gdk_display_get_default (), scr);
         for (monitor = 0; monitor < gdk_screen_get_n_monitors (screen); monitor++)
         {
             gdk_screen_get_monitor_geometry (screen, monitor, &monitor_geometry);
-
+        
             window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
             gtk_window_set_type_hint(GTK_WINDOW(window), GDK_WINDOW_TYPE_HINT_DESKTOP);
 #if GTK_CHECK_VERSION (3, 0, 0)
@@ -2880,7 +2783,7 @@ main (int argc, char **argv)
         gchar *y = strchr(value, ' ');
         if (y)
             (y++)[0] = '\0';
-
+        
         if (read_position_from_str (x, &main_window_pos.x))
             /* If there is no y-part then y = x */
             if (!y || !read_position_from_str (y, &main_window_pos.y))

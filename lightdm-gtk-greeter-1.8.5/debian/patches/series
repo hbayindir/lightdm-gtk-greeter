@@ -3,3 +3,4 @@
 05_disable_infobar_animations.patch
 06_add_message_tracing_logs.patch
 07_add_multiline_infobar_messages.patch
+08_add_keyboard_layout_switching_support.patch
