@@ -675,22 +675,6 @@ set_language (const gchar *language)
 
 
 
-/* This little callback is called from below function.
- * It gets the layouts, finds the current item and activates it on the menu.
- */
-static void
-iterate_over_keyboard_layouts_cb (GtkWidget *keyboard_layout_radiobutton, gpointer *current_layout_name)
-{
-    LightDMLayout *current_iteration_layout = g_object_get_data (G_OBJECT (keyboard_layout_radiobutton), "keyboard-layout");
-    const gchar *current_iteration_layout_name = lightdm_layout_get_name(current_iteration_layout);
-
-    if (g_strcmp0(current_iteration_layout_name, current_layout_name) == 0)
-    {
-        g_warning ("I found the active keyboard layout on the menu, which is %s", current_iteration_layout_name);
-        gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (keyboard_layout_radiobutton), TRUE);
-    }
-}
-
 /* This function sets the keyboard layout and the radio menu that controls the
  * layouts. When called without an argument, it just gets the keyboard and
  * sets the menu. When called with a parameter, it actually sets the layout.
@@ -703,15 +687,26 @@ set_keyboard_layout (LightDMLayout *keyboard_layout)
     if (keyboard_layout == NULL)
     {
         /* Get the current layout and its name. */
-        LightDMLayout *current_layout;
-        const gchar *current_layout_name;
+        LightDMLayout *current_layout, *iteration_layout;
+        const gchar *current_layout_name, *iteration_layout_name;
+        GSList *current_item;
 
         current_layout = lightdm_get_layout ();
         current_layout_name = g_strdup(lightdm_layout_get_name (current_layout));
-        g_warning ("Current keyboard layout name is %s", current_layout_name);
+        g_debug ("Current keyboard layout name is %s", current_layout_name);
 
-        /* Remaining logic is in the callback */
-        g_slist_foreach (keyboard_layouts, (GFunc) iterate_over_keyboard_layouts_cb, (gpointer) current_layout_name);
+        for (current_item = keyboard_layouts; current_item; current_item = g_slist_next(current_item))
+        {
+          iteration_layout = g_object_get_data (G_OBJECT (current_item->data), "keyboard-layout");
+          iteration_layout_name = lightdm_layout_get_name(iteration_layout);
+
+          if (g_strcmp0(iteration_layout_name, current_layout_name) == 0)
+          {
+              g_debug ("Active keyboard layout on the menu, which is %s is found", iteration_layout_name);
+              gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (current_item->data), TRUE);
+              break;
+          }
+        }
     }
 
     if (keyboard_layout != NULL)
