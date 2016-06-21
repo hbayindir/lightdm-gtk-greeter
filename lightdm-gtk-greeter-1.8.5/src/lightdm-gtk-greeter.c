@@ -2740,6 +2740,11 @@ main (int argc, char **argv)
     /* For Now, I will piggyback the keyboard menu to language menu for simplicity */
     if (gtk_widget_get_visible (language_menuitem))
     {
+      /* Before starting everything, add a separator to make things look nice */
+      GtkWidget *menu_separator = gtk_separator_menu_item_new ();
+      gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), menu_separator);
+      gtk_widget_show(menu_separator);
+
       items = lightdm_get_layouts();
       keyboard_layouts = NULL;
 
