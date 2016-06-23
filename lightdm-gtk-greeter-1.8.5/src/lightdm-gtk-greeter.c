@@ -68,7 +68,7 @@ static GtkWidget *clock_label;
 static GtkWidget *menubar, *power_menuitem, *session_menuitem, *language_menuitem, *a11y_menuitem, *session_badge;
 static GtkWidget *suspend_menuitem, *hibernate_menuitem, *restart_menuitem, *shutdown_menuitem;
 static GtkWidget *keyboard_menuitem;
-static GtkMenu *session_menu, *language_menu, *keyboard_layout_menu;
+static GtkMenu *session_menu, *language_menu;
 
 /* Login Window Widgets */
 static GtkWindow *login_window;
@@ -693,6 +693,7 @@ set_keyboard_layout (LightDMLayout *keyboard_layout)
 
         current_layout = lightdm_get_layout ();
         current_layout_name = g_strdup(lightdm_layout_get_name (current_layout));
+
         g_debug ("Current keyboard layout name is %s", current_layout_name);
 
         for (current_item = keyboard_layouts; current_item; current_item = g_slist_next(current_item))
@@ -704,7 +705,7 @@ set_keyboard_layout (LightDMLayout *keyboard_layout)
           {
               g_debug ("Active keyboard layout on the menu, which is %s is found", iteration_layout_name);
               gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (current_item->data), TRUE);
-              break;
+              return;
           }
         }
     }
@@ -2736,44 +2737,134 @@ main (int argc, char **argv)
         }
         set_language (NULL);
     }
-
+    ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START //////////
     /* For Now, I will piggyback the keyboard menu to language menu for simplicity */
     if (gtk_widget_get_visible (language_menuitem))
     {
-      /* Before starting everything, add a separator to make things look nice */
-      GtkWidget *menu_separator = gtk_separator_menu_item_new ();
-      gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), menu_separator);
-      gtk_widget_show(menu_separator);
+        gchar *requested_keyboard_layouts, **requested_keyboard_layouts_list;
+        gchar **tokenized_layout_string;
 
-      items = lightdm_get_layouts();
-      keyboard_layouts = NULL;
+        LightDMLayout *system_keyboard_layout = lightdm_get_layout ();
+        gchar *system_keyboard_layout_name = g_strdup(lightdm_layout_get_name (system_keyboard_layout));
 
-      for (item = items; item; item = item->next)
-      {
-        LightDMLayout *keyboard_layout = item->data;
-        const gchar *layout_name, *layout_description;
+        g_debug ("System keyboard layout name is %s", system_keyboard_layout_name);
+
+        /* Before starting everything, add a separator to make things look nice */
+        GtkWidget *menu_separator = gtk_separator_menu_item_new ();
+        gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), menu_separator);
+        gtk_widget_show(menu_separator);
+
+        requested_keyboard_layouts = NULL;
+        requested_keyboard_layouts_list = NULL;
+
+        /* Get the requested keyboard layouts from the configuration file. */
+        requested_keyboard_layouts = g_key_file_get_value(config, "greeter", "keyboard-layouts", NULL);
+
+        if (requested_keyboard_layouts)
+        {
+            /* Split the list into tokens */
+            requested_keyboard_layouts_list = g_strsplit(requested_keyboard_layouts, ";", -1);
+
+            /* Is the list empty? */
+            if (g_strv_length(requested_keyboard_layouts_list) > 0)
+            {
+                g_debug ("There are %d keyboard layout(s) requested for the menu", g_strv_length(requested_keyboard_layouts_list));
+
+                /* Need to convert layout names to correct format for easier processing. */
+                gint loop_index;
+
+                for(loop_index = 0; loop_index < g_strv_length(requested_keyboard_layouts_list); loop_index = loop_index + 1)
+                {
+                    /* Token it to at most two parts. Allowing for everything exotic in the variant section. */
+                    tokenized_layout_string = NULL;
+                    tokenized_layout_string = g_strsplit(requested_keyboard_layouts_list[loop_index], "~", 2);
+                    g_debug ("Checking layout %s and tokenization returned %d", requested_keyboard_layouts_list[loop_index], g_strv_length(tokenized_layout_string));
+
+                    /* If have a variant, convert the string */
+                    if (g_strv_length(tokenized_layout_string) == 2)
+                    {
+                        g_debug ("Requested layout %s has a variant, converting.", requested_keyboard_layouts_list[loop_index]);
+                        requested_keyboard_layouts_list[loop_index] = g_strconcat (tokenized_layout_string[0], "\t", tokenized_layout_string[1], NULL);
+                        g_debug ("Requested layout is convterted to %s", requested_keyboard_layouts_list[loop_index]);
+                    }
+                    g_strfreev(tokenized_layout_string);
+                }
+            }
+        }
+
+      /*
+       * This is not very elegant or optimal, but since it's not possible to
+       * create a layout object directly in LightDM's API, I loop every layout
+       * and check whether it's one of the things we want.
+       */
+
+        LightDMLayout *keyboard_layout;
+        gchar *layout_name, *layout_description;
         gchar *label;
         GtkWidget *radiomenuitem;
+        gint loop_index;
+        gboolean system_layout_added;
 
-        layout_name = g_strdup (lightdm_layout_get_name (keyboard_layout));
-        layout_description = g_strdup (lightdm_layout_get_description(keyboard_layout));
-        label = layout_description;
+        system_layout_added = FALSE;
+        keyboard_layouts = NULL;
+        items = lightdm_get_layouts();
 
-        // TODO: Change this method to something configurable or automagic.
-        // Only add Turkish Q, Turkish F and English keyboard layouts.
-        if (g_strcmp0(layout_name, "tr") == 0 || g_strcmp0(layout_name, "tr\tf") == 0)
+        for (item = items; item; item = item->next)
         {
+            keyboard_layout = item->data;
+            layout_name = g_strdup (lightdm_layout_get_name (keyboard_layout));
+            layout_description = g_strdup (lightdm_layout_get_description(keyboard_layout));
+            label = layout_description;
+
+            for(loop_index = 0; loop_index < g_strv_length(requested_keyboard_layouts_list); loop_index = loop_index + 1)
+            {
+                /* This complex if statement is written to keep the system default keyboard in its correct place in the menu, if it's not already on the requested layouts list. */
+                if (g_strcmp0 (layout_name, requested_keyboard_layouts_list[loop_index]) == 0 || (!system_layout_added && g_strcmp0 (layout_name, system_keyboard_layout_name) == 0 ))
+                {
+                    g_debug ("Adding keybaord layout %s", layout_name);
+                    radiomenuitem = gtk_radio_menu_item_new_with_label (keyboard_layouts, label);
+                    g_object_set_data (G_OBJECT (radiomenuitem), "keyboard-layout", (gpointer) keyboard_layout);
+                    keyboard_layouts = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
+                    g_signal_connect(G_OBJECT(radiomenuitem), "activate", G_CALLBACK(keyboard_layout_selected_cb), NULL);
+                    gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), radiomenuitem);
+                    gtk_widget_show (GTK_WIDGET(radiomenuitem));
+                }
+
+                if (g_strcmp0 (layout_name, system_keyboard_layout_name) == 0 && !system_layout_added)
+                {
+                    system_layout_added = TRUE;
+                }
+            }
+        }
+
+        /*
+         * At this point, if the system layout is not added, add it manually.
+         * Handles the cases where keyboard-layouts field is not present
+         * in  the configuration file.
+         */
+        if (!system_layout_added)
+        {
+            keyboard_layout = lightdm_get_layout();
+            layout_name = g_strdup (lightdm_layout_get_name (keyboard_layout));
+            layout_description = g_strdup (lightdm_layout_get_description(keyboard_layout));
+            label = g_strdup(layout_description);
+
+            g_debug ("Adding system keybaord layout %s", layout_name);
             radiomenuitem = gtk_radio_menu_item_new_with_label (keyboard_layouts, label);
             g_object_set_data (G_OBJECT (radiomenuitem), "keyboard-layout", (gpointer) keyboard_layout);
             keyboard_layouts = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
             g_signal_connect(G_OBJECT(radiomenuitem), "activate", G_CALLBACK(keyboard_layout_selected_cb), NULL);
             gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), radiomenuitem);
             gtk_widget_show (GTK_WIDGET(radiomenuitem));
-        }
-      }
 
-      set_keyboard_layout(NULL);
+            g_free(layout_description);
+        }
+
+        set_keyboard_layout(NULL);
+        g_strfreev(requested_keyboard_layouts_list);
     }
+
+    ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END //////////
 
     /* a11y menu */
     if (gtk_widget_get_visible (a11y_menuitem))
