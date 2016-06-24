@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.16.1 -->
 <interface>
-  <requires lib="gtk+" version="3.0"/>
   <object class="GtkAccelGroup" id="a11y_accelgroup"/>
   <object class="GtkAccelGroup" id="power_accelgroup"/>
   <object class="GtkWindow" id="panel_window">
@@ -148,19 +147,6 @@
                 <property name="label">[language_code]</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="language_menu">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="keyboard_layout_menuitem">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="label">[keyboard_layout]</property>
-                <child type="submenu">
-                  <object class="GtkMenu" id="keyboard_layout_menu">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                   </object>

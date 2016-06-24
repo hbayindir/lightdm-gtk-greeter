@@ -65,10 +65,10 @@ static GdkPixbuf *background_pixbuf = NULL;
 /* Panel Widgets */
 static GtkWindow *panel_window;
 static GtkWidget *clock_label;
-static GtkWidget *menubar, *power_menuitem, *session_menuitem, *language_menuitem, *a11y_menuitem, *session_badge;
+static GtkWidget *menubar, *power_menuitem, *session_menuitem, *language_menuitem, *keyboard_layout_menuitem, *a11y_menuitem, *session_badge;
 static GtkWidget *suspend_menuitem, *hibernate_menuitem, *restart_menuitem, *shutdown_menuitem;
 static GtkWidget *keyboard_menuitem;
-static GtkMenu *session_menu, *language_menu;
+static GtkMenu *session_menu, *language_menu, *keyboard_layout_menu;
 
 /* Login Window Widgets */
 static GtkWindow *login_window;
@@ -673,8 +673,6 @@ set_language (const gchar *language)
     }
 }
 
-
-
 /* This function sets the keyboard layout and the radio menu that controls the
  * layouts. When called without an argument, it just gets the keyboard and
  * sets the menu. When called with a parameter, it actually sets the layout.
@@ -687,12 +685,13 @@ set_keyboard_layout (LightDMLayout *keyboard_layout)
     if (keyboard_layout == NULL)
     {
         /* Get the current layout and its name. */
-        LightDMLayout *current_layout, *iteration_layout;
+        LightDMLayout *current_layout, *iteration_layout, *current_layout_description;
         const gchar *current_layout_name, *iteration_layout_name;
         GSList *current_item;
 
         current_layout = lightdm_get_layout ();
         current_layout_name = g_strdup(lightdm_layout_get_name (current_layout));
+        current_layout_description = g_strdup(lightdm_layout_get_description (current_layout));
 
         g_debug ("Current keyboard layout name is %s", current_layout_name);
 
@@ -704,7 +703,9 @@ set_keyboard_layout (LightDMLayout *keyboard_layout)
           if (g_strcmp0(iteration_layout_name, current_layout_name) == 0)
           {
               g_debug ("Active keyboard layout on the menu, which is %s is found", iteration_layout_name);
+              gtk_menu_item_set_label(GTK_MENU_ITEM (keyboard_layout_menuitem), current_layout_description);
               gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (current_item->data), TRUE);
+
               return;
           }
         }
@@ -712,7 +713,10 @@ set_keyboard_layout (LightDMLayout *keyboard_layout)
 
     if (keyboard_layout != NULL)
     {
+        gchar *requested_keyboard_layout = g_strdup(lightdm_layout_get_description(keyboard_layout));
         lightdm_set_layout(keyboard_layout);
+        gtk_menu_item_set_label(GTK_MENU_ITEM (keyboard_layout_menuitem), requested_keyboard_layout);
+
         return;
     }
 }
@@ -2564,6 +2568,7 @@ main (int argc, char **argv)
     gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "hostname_label")), lightdm_get_hostname ());
     session_menu = GTK_MENU(gtk_builder_get_object (builder, "session_menu"));
     language_menu = GTK_MENU(gtk_builder_get_object (builder, "language_menu"));
+    keyboard_layout_menu = GTK_MENU(gtk_builder_get_object (builder, "keyboard_layout_menu"));
     clock_label = GTK_WIDGET(gtk_builder_get_object (builder, "clock_label"));
     menubar = GTK_WIDGET (gtk_builder_get_object (builder, "menubar"));
     /* Never allow the panel-window to be moved via the menubar */
@@ -2630,6 +2635,7 @@ main (int argc, char **argv)
     /* Indicators */
     session_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "session_menuitem"));
     language_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "language_menuitem"));
+    keyboard_layout_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "keyboard_layout_menuitem"));
     a11y_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "a11y_menuitem"));
     power_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "power_menuitem"));
 
@@ -2738,7 +2744,6 @@ main (int argc, char **argv)
         set_language (NULL);
     }
     ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START //////////
-    /* For Now, I will piggyback the keyboard menu to language menu for simplicity */
     if (gtk_widget_get_visible (language_menuitem))
     {
         gchar *requested_keyboard_layouts, **requested_keyboard_layouts_list;
@@ -2748,11 +2753,6 @@ main (int argc, char **argv)
         gchar *system_keyboard_layout_name = g_strdup(lightdm_layout_get_name (system_keyboard_layout));
 
         g_debug ("System keyboard layout name is %s", system_keyboard_layout_name);
-
-        /* Before starting everything, add a separator to make things look nice */
-        GtkWidget *menu_separator = gtk_separator_menu_item_new ();
-        gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), menu_separator);
-        gtk_widget_show(menu_separator);
 
         requested_keyboard_layouts = NULL;
         requested_keyboard_layouts_list = NULL;
@@ -2826,7 +2826,7 @@ main (int argc, char **argv)
                     g_object_set_data (G_OBJECT (radiomenuitem), "keyboard-layout", (gpointer) keyboard_layout);
                     keyboard_layouts = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
                     g_signal_connect(G_OBJECT(radiomenuitem), "activate", G_CALLBACK(keyboard_layout_selected_cb), NULL);
-                    gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), radiomenuitem);
+                    gtk_menu_shell_append (GTK_MENU_SHELL(keyboard_layout_menu), radiomenuitem);
                     gtk_widget_show (GTK_WIDGET(radiomenuitem));
                 }
 
@@ -2854,7 +2854,7 @@ main (int argc, char **argv)
             g_object_set_data (G_OBJECT (radiomenuitem), "keyboard-layout", (gpointer) keyboard_layout);
             keyboard_layouts = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
             g_signal_connect(G_OBJECT(radiomenuitem), "activate", G_CALLBACK(keyboard_layout_selected_cb), NULL);
-            gtk_menu_shell_append (GTK_MENU_SHELL(language_menu), radiomenuitem);
+            gtk_menu_shell_append (GTK_MENU_SHELL(keyboard_layout_menu), radiomenuitem);
             gtk_widget_show (GTK_WIDGET(radiomenuitem));
 
             g_free(layout_description);

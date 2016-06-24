@@ -1,0 +1,65 @@
+Description: Add keyboard layout menu to the GTK interface. 
+ Add keyboard layout menu to GTK user interface. Also enable the MAINTAINER MODE
+ in configure.ac to enable .glade to .h conversion.
+Author: Hakan Bayindir <hakan.bayindir@tubitak.gov.tr>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: https://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+Index: lightdm-gtk-greeter-1.8.5/configure.ac
+===================================================================
+--- lightdm-gtk-greeter-1.8.5.orig/configure.ac
++++ lightdm-gtk-greeter-1.8.5/configure.ac
+@@ -6,7 +6,7 @@ AC_CONFIG_HEADER(config.h)
+ AM_INIT_AUTOMAKE
+ LT_INIT
+ AM_PROG_CC_C_O
+-AM_MAINTAINER_MODE
++AM_MAINTAINER_MODE([enable])
+ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
+ 
+ GOBJECT_INTROSPECTION_CHECK(0.9.5)
+Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.glade
+===================================================================
+--- lightdm-gtk-greeter-1.8.5.orig/src/lightdm-gtk-greeter.glade
++++ lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.glade
+@@ -1,6 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+-<!-- Generated with glade 3.16.1 -->
++<!-- Generated with glade 3.18.3 -->
+ <interface>
++  <requires lib="gtk+" version="3.0"/>
+   <object class="GtkAccelGroup" id="a11y_accelgroup"/>
+   <object class="GtkAccelGroup" id="power_accelgroup"/>
+   <object class="GtkWindow" id="panel_window">
+@@ -139,6 +140,20 @@
+                   </object>
+                 </child>
+               </object>
++            </child>
++            <child>
++              <object class="GtkMenuItem" id="keyboard_layout_menuitem">
++                <property name="visible">True</property>
++                <property name="can_focus">True</property>
++                <property name="label">[keyboard_layout]</property>
++                <property name="use_underline">True</property>
++                <child type="submenu">
++                  <object class="GtkMenu" id="keyboard_layout_menu">
++                    <property name="visible">True</property>
++                    <property name="can_focus">False</property>
++                  </object>
++                </child>
++              </object>
+             </child>
+             <child>
+               <object class="GtkMenuItem" id="language_menuitem">
