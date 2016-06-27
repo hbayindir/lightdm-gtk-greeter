@@ -407,12 +407,23 @@ init_indicators (GKeyFile* config)
             fallback = TRUE;
     }
 
+    /*
+     * To have names, you have to enter either of the two if statements.
+     * To have fallback, you have to enter the second and have no names.
+     * So, to enter the following if block you have the following choices:
+     * - Enter the first if, size (included indicators) doesn't matter.
+     * - Enter the second if and have indicators listed.
+     *
+     * As a result, if we have names, we first remove everything, so we can
+     * add the required items next.
+     */
     if (names && !fallback)
     {
         builtin_items = g_hash_table_new (g_str_hash, g_str_equal);
 
         g_hash_table_insert (builtin_items, "~power", power_menuitem);
         g_hash_table_insert (builtin_items, "~session", session_menuitem);
+        g_hash_table_insert (builtin_items, "~keyboard-layout", keyboard_layout_menuitem);
         g_hash_table_insert (builtin_items, "~language", language_menuitem);
         g_hash_table_insert (builtin_items, "~a11y", a11y_menuitem);
 
@@ -421,6 +432,7 @@ init_indicators (GKeyFile* config)
             gtk_container_remove (GTK_CONTAINER (menubar), iter_value);
     }
 
+    /* Then add them one by one to the panel */
     for (i = 0; i < length; ++i)
     {
         if (names[i][0] == '~' && g_hash_table_lookup_extended (builtin_items, names[i], NULL, &iter_value))
@@ -2743,8 +2755,9 @@ main (int argc, char **argv)
         }
         set_language (NULL);
     }
-    ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START //////////
-    if (gtk_widget_get_visible (language_menuitem))
+
+    /* Keyboard layout menu */
+    if (gtk_widget_get_visible (keyboard_layout_menuitem))
     {
         gchar *requested_keyboard_layouts, **requested_keyboard_layouts_list;
         gchar **tokenized_layout_string;
@@ -2863,8 +2876,6 @@ main (int argc, char **argv)
         set_keyboard_layout(NULL);
         g_strfreev(requested_keyboard_layouts_list);
     }
-
-    ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END ////////// END //////////
 
     /* a11y menu */
     if (gtk_widget_get_visible (a11y_menuitem))

@@ -53,7 +53,39 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  /* Screensaver values */
  int timeout, interval, prefer_blanking, allow_exposures;
  
-@@ -606,7 +609,7 @@ get_language (void)
+@@ -404,12 +407,23 @@ init_indicators (GKeyFile* config)
+             fallback = TRUE;
+     }
+ 
++    /*
++     * To have names, you have to enter either of the two if statements.
++     * To have fallback, you have to enter the second and have no names.
++     * So, to enter the following if block you have the following choices:
++     * - Enter the first if, size (included indicators) doesn't matter.
++     * - Enter the second if and have indicators listed.
++     *
++     * As a result, if we have names, we first remove everything, so we can
++     * add the required items next.
++     */
+     if (names && !fallback)
+     {
+         builtin_items = g_hash_table_new (g_str_hash, g_str_equal);
+ 
+         g_hash_table_insert (builtin_items, "~power", power_menuitem);
+         g_hash_table_insert (builtin_items, "~session", session_menuitem);
++        g_hash_table_insert (builtin_items, "~keyboard-layout", keyboard_layout_menuitem);
+         g_hash_table_insert (builtin_items, "~language", language_menuitem);
+         g_hash_table_insert (builtin_items, "~a11y", a11y_menuitem);
+ 
+@@ -418,6 +432,7 @@ init_indicators (GKeyFile* config)
+             gtk_container_remove (GTK_CONTAINER (menubar), iter_value);
+     }
+ 
++    /* Then add them one by one to the panel */
+     for (i = 0; i < length; ++i)
+     {
+         if (names[i][0] == '~' && g_hash_table_lookup_extended (builtin_items, names[i], NULL, &iter_value))
+@@ -606,7 +621,7 @@ get_language (void)
      if (current_language)
          return g_strdup (current_language);
  
@@ -62,7 +94,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      for (menu_iter = menu_items; menu_iter != NULL; menu_iter = g_list_next(menu_iter))
      {
          if (gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(menu_iter->data)))
-@@ -621,7 +624,7 @@ get_language (void)
+@@ -621,7 +636,7 @@ get_language (void)
  static void
  set_language (const gchar *language)
  {
@@ -71,7 +103,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      GList *menu_items, *menu_iter;
  
      if (!gtk_widget_get_visible (language_menuitem))
-@@ -670,6 +673,54 @@ set_language (const gchar *language)
+@@ -670,6 +685,54 @@ set_language (const gchar *language)
      }
  }
  
@@ -126,7 +158,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  static void
  set_message_label (const gchar *text)
  {
-@@ -758,7 +809,7 @@ set_user_image (const gchar *username)
+@@ -758,7 +821,7 @@ set_user_image (const gchar *username)
              }
          }
      }
@@ -135,7 +167,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      if (default_user_pixbuf)
          gtk_image_set_from_pixbuf (GTK_IMAGE (user_image), default_user_pixbuf);
      else
-@@ -786,7 +837,7 @@ get_absolute_position (const DimensionPo
+@@ -786,7 +849,7 @@ get_absolute_position (const DimensionPo
  
  static void
  center_window (GtkWindow *window, GtkAllocation *unused, const WindowPosition *pos)
@@ -144,7 +176,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      GdkScreen *screen = gtk_window_get_screen (window);
      GtkAllocation allocation;
      GdkRectangle monitor_geometry;
-@@ -1093,6 +1144,19 @@ language_selected_cb(GtkMenuItem *menuit
+@@ -1093,6 +1156,19 @@ language_selected_cb(GtkMenuItem *menuit
      }
  }
  
@@ -164,7 +196,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  static void
  power_menu_cb (GtkWidget *menuitem, gpointer userdata)
  {
-@@ -1362,7 +1426,7 @@ process_prompts (LightDMGreeter *greeter
+@@ -1362,7 +1438,7 @@ process_prompts (LightDMGreeter *greeter
          /* If we're reached here, we're going to write different things to the infobar. */
          g_debug ("[process_prompts] Setting append next prompt to FALSE");
          append_next_prompt = FALSE;
@@ -173,7 +205,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
          /*
           * If we've reached here, the message label is gonna change below,
           * so we won't need that message.
-@@ -1419,7 +1483,7 @@ login_cb (GtkWidget *widget)
+@@ -1419,7 +1495,7 @@ login_cb (GtkWidget *widget)
  {
      /* Reset to default screensaver values */
      if (lightdm_greeter_get_lock_hint (greeter))
@@ -182,7 +214,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  
      gtk_widget_set_sensitive (GTK_WIDGET (username_entry), FALSE);
      gtk_widget_set_sensitive (GTK_WIDGET (password_entry), FALSE);
-@@ -1549,7 +1613,7 @@ show_power_prompt (const gchar* action,
+@@ -1549,7 +1625,7 @@ show_power_prompt (const gchar* action,
      const GList *items, *item;
      gint logged_in_users = 0;
      gchar *warning;
@@ -191,7 +223,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      /* Check if there are still users logged in, count them and if so, display a warning */
      items = lightdm_user_list_get_users (lightdm_user_list_get_instance ());
      for (item = items; item; item = item->next)
-@@ -1574,7 +1638,7 @@ show_power_prompt (const gchar* action,
+@@ -1574,7 +1650,7 @@ show_power_prompt (const gchar* action,
                                       GTK_MESSAGE_OTHER,
                                       GTK_BUTTONS_NONE,
                                       "%s", action);
@@ -200,7 +232,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      button = gtk_dialog_add_button(GTK_DIALOG (dialog), _("Cancel"), GTK_RESPONSE_CANCEL);
      gtk_widget_set_name(button, "cancel_button");
      button = gtk_dialog_add_button(GTK_DIALOG (dialog), action, GTK_RESPONSE_OK);
-@@ -1908,7 +1972,7 @@ load_user_list (void)
+@@ -1908,7 +1984,7 @@ load_user_list (void)
      {
          gchar *name;
          gboolean matched = FALSE;
@@ -209,7 +241,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
          if (selected_user)
          {
              do
-@@ -1934,7 +1998,7 @@ load_user_list (void)
+@@ -1934,7 +2010,7 @@ load_user_list (void)
              set_displayed_user(greeter, name);
              g_free(name);
          }
@@ -218,7 +250,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      }
  
      g_free (last_user);
-@@ -2194,16 +2258,16 @@ clock_timeout_thread (void)
+@@ -2194,16 +2270,16 @@ clock_timeout_thread (void)
      struct tm * timeinfo;
      gchar time_str[50];
      gchar *markup;
@@ -238,7 +270,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      return TRUE;
  }
  
-@@ -2343,7 +2407,7 @@ main (int argc, char **argv)
+@@ -2343,7 +2419,7 @@ main (int argc, char **argv)
  
      /* init gtk */
      gtk_init (&argc, &argv);
@@ -247,7 +279,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
  #ifdef HAVE_LIBIDO
      ido_init ();
  #endif
-@@ -2366,7 +2430,7 @@ main (int argc, char **argv)
+@@ -2366,7 +2442,7 @@ main (int argc, char **argv)
      g_clear_error (&error);
  
      greeter = lightdm_greeter_new ();
@@ -256,7 +288,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      g_signal_connect (greeter, "show-message", G_CALLBACK (show_message_cb), NULL);
      g_signal_connect (greeter, "authentication-complete", G_CALLBACK (authentication_complete_cb), NULL);
      g_signal_connect (greeter, "autologin-timer-expired", G_CALLBACK (lightdm_greeter_authenticate_autologin), NULL);
-@@ -2419,7 +2483,7 @@ main (int argc, char **argv)
+@@ -2419,7 +2495,7 @@ main (int argc, char **argv)
      if (value)
          screensaver_timeout = g_ascii_strtoll (value, &end_ptr, 0);
      g_free (value);
@@ -265,7 +297,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      display = gdk_x11_display_get_xdisplay(gdk_display_get_default ());
      if (lightdm_greeter_get_lock_hint (greeter)) {
          XGetScreenSaver(display, &timeout, &interval, &prefer_blanking, &allow_exposures);
-@@ -2459,7 +2523,7 @@ main (int argc, char **argv)
+@@ -2459,7 +2535,7 @@ main (int argc, char **argv)
          value = g_strdup("Sans 10");
          g_object_set (gtk_settings_get_default (), "gtk-font-name", value, NULL);
      }
@@ -274,7 +306,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      value = g_key_file_get_value (config, "greeter", "xft-dpi", NULL);
      if (value)
          g_object_set (gtk_settings_get_default (), "gtk-xft-dpi", (int) (1024 * atof (value)), NULL);
-@@ -2475,7 +2539,7 @@ main (int argc, char **argv)
+@@ -2475,7 +2551,7 @@ main (int argc, char **argv)
      if (value)
          g_object_set (gtk_settings_get_default (), "gtk-xft-rgba", value, NULL);
      g_free (value);
@@ -283,7 +315,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      /* Get a11y on screen keyboard command*/
      gint argp;
      value = g_key_file_get_value (config, "greeter", "keyboard", NULL);
-@@ -2493,7 +2557,7 @@ main (int argc, char **argv)
+@@ -2493,7 +2569,7 @@ main (int argc, char **argv)
          return EXIT_FAILURE;
      }
      g_clear_error (&error);
@@ -292,7 +324,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      /* Panel */
      panel_window = GTK_WINDOW (gtk_builder_get_object (builder, "panel_window"));
  #if GTK_CHECK_VERSION (3, 0, 0)
-@@ -2504,15 +2568,16 @@ main (int argc, char **argv)
+@@ -2504,15 +2580,16 @@ main (int argc, char **argv)
      gtk_label_set_text (GTK_LABEL (gtk_builder_get_object (builder, "hostname_label")), lightdm_get_hostname ());
      session_menu = GTK_MENU(gtk_builder_get_object (builder, "session_menu"));
      language_menu = GTK_MENU(gtk_builder_get_object (builder, "language_menu"));
@@ -311,7 +343,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      keyboard_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "keyboard_menuitem"));
  
      /* Login window */
-@@ -2570,6 +2635,7 @@ main (int argc, char **argv)
+@@ -2570,6 +2647,7 @@ main (int argc, char **argv)
      /* Indicators */
      session_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "session_menuitem"));
      language_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "language_menuitem"));
@@ -319,7 +351,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      a11y_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "a11y_menuitem"));
      power_menuitem = GTK_WIDGET (gtk_builder_get_object (builder, "power_menuitem"));
  
-@@ -2630,7 +2696,7 @@ main (int argc, char **argv)
+@@ -2630,7 +2708,7 @@ main (int argc, char **argv)
          {
              LightDMSession *session = item->data;
              GtkWidget *radiomenuitem;
@@ -328,7 +360,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
              radiomenuitem = gtk_radio_menu_item_new_with_label (sessions, lightdm_session_get_name (session));
              g_object_set_data (G_OBJECT (radiomenuitem), "session-key", (gpointer) lightdm_session_get_key (session));
              sessions = gtk_radio_menu_item_get_group (GTK_RADIO_MENU_ITEM (radiomenuitem));
-@@ -2658,7 +2724,7 @@ main (int argc, char **argv)
+@@ -2658,7 +2736,7 @@ main (int argc, char **argv)
                  label = g_strdup_printf ("%s - %s", lightdm_language_get_name (language), country);
              else
                  label = g_strdup (lightdm_language_get_name (language));
@@ -337,13 +369,13 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
              code = lightdm_language_get_code (language);
              gchar *modifier = strchr (code, '@');
              if (modifier != NULL)
-@@ -2677,7 +2743,129 @@ main (int argc, char **argv)
+@@ -2677,7 +2755,129 @@ main (int argc, char **argv)
          }
          set_language (NULL);
      }
 -    
 +    ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START ////////// START //////////
-+    if (gtk_widget_get_visible (language_menuitem))
++    if (gtk_widget_get_visible (keyboard_layout_menuitem))
 +    {
 +        gchar *requested_keyboard_layouts, **requested_keyboard_layouts_list;
 +        gchar **tokenized_layout_string;
@@ -468,7 +500,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
      /* a11y menu */
      if (gtk_widget_get_visible (a11y_menuitem))
      {
-@@ -2725,14 +2913,14 @@ main (int argc, char **argv)
+@@ -2725,14 +2925,14 @@ main (int argc, char **argv)
          numScreens = gdk_display_get_n_screens (gdk_display_get_default());
      #endif
  
@@ -485,7 +517,7 @@ Index: lightdm-gtk-greeter-1.8.5/src/lightdm-gtk-greeter.c
              window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
              gtk_window_set_type_hint(GTK_WINDOW(window), GDK_WINDOW_TYPE_HINT_DESKTOP);
  #if GTK_CHECK_VERSION (3, 0, 0)
-@@ -2783,7 +2971,7 @@ main (int argc, char **argv)
+@@ -2783,7 +2983,7 @@ main (int argc, char **argv)
          gchar *y = strchr(value, ' ');
          if (y)
              (y++)[0] = '\0';
