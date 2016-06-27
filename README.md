@@ -17,7 +17,8 @@ This version differs from the Debian Stable version in following ways:
     * Keyboard layouts can be configured via `keyboard-layouts=...` option.
         * Keyboards are delimited with `;` (e.g.: `keybaord-layouts=us;tr`)
         * Keyboard variants are delimited with `~` (e.g.: `keyboard-layouts=tr;tr~f;tr~alt`)
-        * If `keyboard-layouts=` is omitted or left empty, system default keyboard is *always* added when the indicator is enabled.
+        * System default keyboard is *always* added when the indicator is enabled.
+        * If the `keyboard-layout=` option is omitted or left empty, system default keyboard is added only.
 
 ## Who?
 
